@@ -1,0 +1,1189 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name": {
+            "defaultValue": "AZ-VC-PROD-APPSRV-WEB-ADMIN",
+            "type": "String"
+        },
+        "serverfarms_AZ_VC_PROD_APPSRV_WEB_ADMIN_ASP_name": {
+            "defaultValue": "AZ-VC-PROD-APPSRV-WEB-ADMIN-ASP",
+            "type": "String"
+        },
+        "components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name": {
+            "defaultValue": "AZ-VC-PROD-APPSRV-WEB-ADMIN-INSIGHTS",
+            "type": "String"
+        },
+        "actionGroups_Application_Insights_Smart_Detection_name": {
+            "defaultValue": "Application Insights Smart Detection",
+            "type": "String"
+        },
+        "smartdetectoralertrules_failure_anomalies___az_vc_prod_appsrv_web_admin_insights_name": {
+            "defaultValue": "failure anomalies - az-vc-prod-appsrv-web-admin-insights",
+            "type": "String"
+        },
+        "workspaces_defaultworkspace_763499a6_28bb_4e1e_a90e_547b271f8f5a_cus_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/defaultresourcegroup-cus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-763499a6-28bb-4e1e-a90e-547b271f8f5a-cus",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "microsoft.insights/actionGroups",
+            "apiVersion": "2019-06-01",
+            "name": "[parameters('actionGroups_Application_Insights_Smart_Detection_name')]",
+            "location": "Global",
+            "properties": {
+                "groupShortName": "SmartDetect",
+                "enabled": true,
+                "emailReceivers": [],
+                "smsReceivers": [],
+                "webhookReceivers": [],
+                "itsmReceivers": [],
+                "azureAppPushReceivers": [],
+                "automationRunbookReceivers": [],
+                "voiceReceivers": [],
+                "logicAppReceivers": [],
+                "azureFunctionReceivers": [],
+                "armRoleReceivers": [
+                    {
+                        "name": "Monitoring Contributor",
+                        "roleId": "749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                        "useCommonAlertSchema": true
+                    },
+                    {
+                        "name": "Monitoring Reader",
+                        "roleId": "43d0d8ad-25c7-4714-9337-8ba259a9fe05",
+                        "useCommonAlertSchema": true
+                    }
+                ]
+            }
+        },
+        {
+            "type": "microsoft.insights/components",
+            "apiVersion": "2020-02-02",
+            "name": "[parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name')]",
+            "location": "centralus",
+            "tags": {
+                "Prod": "app service"
+            },
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "Flow_Type": "Redfield",
+                "Request_Source": "IbizaWebAppExtensionCreate",
+                "RetentionInDays": 90,
+                "WorkspaceResourceId": "[parameters('workspaces_defaultworkspace_763499a6_28bb_4e1e_a90e_547b271f8f5a_cus_externalid')]",
+                "IngestionMode": "LogAnalytics",
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2021-02-01",
+            "name": "[parameters('serverfarms_AZ_VC_PROD_APPSRV_WEB_ADMIN_ASP_name')]",
+            "location": "Central US",
+            "tags": {
+                "Prod": "app service"
+            },
+            "sku": {
+                "name": "P2v3",
+                "tier": "PremiumV3",
+                "size": "P2v3",
+                "family": "Pv3",
+                "capacity": 1
+            },
+            "kind": "app",
+            "properties": {
+                "perSiteScaling": false,
+                "elasticScaleEnabled": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": false,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0,
+                "zoneRedundant": false
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/degradationindependencyduration')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "degradationindependencyduration",
+                    "DisplayName": "Degradation in dependency duration",
+                    "Description": "Smart Detection rules notify you of performance anomaly issues.",
+                    "HelpUrl": "https://docs.microsoft.com/en-us/azure/application-insights/app-insights-proactive-performance-diagnostics",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": false,
+                    "SupportsEmailNotifications": true
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/degradationinserverresponsetime')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "degradationinserverresponsetime",
+                    "DisplayName": "Degradation in server response time",
+                    "Description": "Smart Detection rules notify you of performance anomaly issues.",
+                    "HelpUrl": "https://docs.microsoft.com/en-us/azure/application-insights/app-insights-proactive-performance-diagnostics",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": false,
+                    "SupportsEmailNotifications": true
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/digestMailConfiguration')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "digestMailConfiguration",
+                    "DisplayName": "Digest Mail Configuration",
+                    "Description": "This rule describes the digest mail preferences",
+                    "HelpUrl": "www.homail.com",
+                    "IsHidden": true,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": false,
+                    "SupportsEmailNotifications": true
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/extension_billingdatavolumedailyspikeextension')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "extension_billingdatavolumedailyspikeextension",
+                    "DisplayName": "Abnormal rise in daily data volume (preview)",
+                    "Description": "This detection rule automatically analyzes the billing data generated by your application, and can warn you about an unusual increase in your application's billing costs",
+                    "HelpUrl": "https://github.com/Microsoft/ApplicationInsights-Home/tree/master/SmartDetection/billing-data-volume-daily-spike.md",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": true,
+                    "SupportsEmailNotifications": false
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/extension_canaryextension')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "extension_canaryextension",
+                    "DisplayName": "Canary extension",
+                    "Description": "Canary extension",
+                    "HelpUrl": "https://github.com/Microsoft/ApplicationInsights-Home/blob/master/SmartDetection/",
+                    "IsHidden": true,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": true,
+                    "SupportsEmailNotifications": false
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/extension_exceptionchangeextension')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "extension_exceptionchangeextension",
+                    "DisplayName": "Abnormal rise in exception volume (preview)",
+                    "Description": "This detection rule automatically analyzes the exceptions thrown in your application, and can warn you about unusual patterns in your exception telemetry.",
+                    "HelpUrl": "https://github.com/Microsoft/ApplicationInsights-Home/blob/master/SmartDetection/abnormal-rise-in-exception-volume.md",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": true,
+                    "SupportsEmailNotifications": false
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/extension_memoryleakextension')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "extension_memoryleakextension",
+                    "DisplayName": "Potential memory leak detected (preview)",
+                    "Description": "This detection rule automatically analyzes the memory consumption of each process in your application, and can warn you about potential memory leaks or increased memory consumption.",
+                    "HelpUrl": "https://github.com/Microsoft/ApplicationInsights-Home/tree/master/SmartDetection/memory-leak.md",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": true,
+                    "SupportsEmailNotifications": false
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/extension_securityextensionspackage')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "extension_securityextensionspackage",
+                    "DisplayName": "Potential security issue detected (preview)",
+                    "Description": "This detection rule automatically analyzes the telemetry generated by your application and detects potential security issues.",
+                    "HelpUrl": "https://github.com/Microsoft/ApplicationInsights-Home/blob/master/SmartDetection/application-security-detection-pack.md",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": true,
+                    "SupportsEmailNotifications": false
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/extension_traceseveritydetector')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "extension_traceseveritydetector",
+                    "DisplayName": "Degradation in trace severity ratio (preview)",
+                    "Description": "This detection rule automatically analyzes the trace logs emitted from your application, and can warn you about unusual patterns in the severity of your trace telemetry.",
+                    "HelpUrl": "https://github.com/Microsoft/ApplicationInsights-Home/blob/master/SmartDetection/degradation-in-trace-severity-ratio.md",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": true,
+                    "SupportsEmailNotifications": false
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/longdependencyduration')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "longdependencyduration",
+                    "DisplayName": "Long dependency duration",
+                    "Description": "Smart Detection rules notify you of performance anomaly issues.",
+                    "HelpUrl": "https://docs.microsoft.com/en-us/azure/application-insights/app-insights-proactive-performance-diagnostics",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": false,
+                    "SupportsEmailNotifications": true
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/migrationToAlertRulesCompleted')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "migrationToAlertRulesCompleted",
+                    "DisplayName": "Migration To Alert Rules Completed",
+                    "Description": "A configuration that controls the migration state of Smart Detection to Smart Alerts",
+                    "HelpUrl": "https://docs.microsoft.com/en-us/azure/application-insights/app-insights-proactive-performance-diagnostics",
+                    "IsHidden": true,
+                    "IsEnabledByDefault": false,
+                    "IsInPreview": true,
+                    "SupportsEmailNotifications": false
+                },
+                "enabled": false,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/slowpageloadtime')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "slowpageloadtime",
+                    "DisplayName": "Slow page load time",
+                    "Description": "Smart Detection rules notify you of performance anomaly issues.",
+                    "HelpUrl": "https://docs.microsoft.com/en-us/azure/application-insights/app-insights-proactive-performance-diagnostics",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": false,
+                    "SupportsEmailNotifications": true
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "microsoft.insights/components/ProactiveDetectionConfigs",
+            "apiVersion": "2018-05-01-preview",
+            "name": "[concat(parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'), '/slowserverresponsetime')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+            ],
+            "properties": {
+                "ruleDefinitions": {
+                    "Name": "slowserverresponsetime",
+                    "DisplayName": "Slow server response time",
+                    "Description": "Smart Detection rules notify you of performance anomaly issues.",
+                    "HelpUrl": "https://docs.microsoft.com/en-us/azure/application-insights/app-insights-proactive-performance-diagnostics",
+                    "IsHidden": false,
+                    "IsEnabledByDefault": true,
+                    "IsInPreview": false,
+                    "SupportsEmailNotifications": true
+                },
+                "enabled": true,
+                "sendEmailsToSubscriptionOwners": true,
+                "customEmails": []
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2021-02-01",
+            "name": "[parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_AZ_VC_PROD_APPSRV_WEB_ADMIN_ASP_name'))]"
+            ],
+            "tags": {
+                "Prod": "app service"
+            },
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "az-vc-prod-appsrv-web-admin.azurewebsites.net",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "az-vc-prod-appsrv-web-admin.scm.azurewebsites.net",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_AZ_VC_PROD_APPSRV_WEB_ADMIN_ASP_name'))]",
+                "reserved": false,
+                "isXenon": false,
+                "hyperV": false,
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": true,
+                    "http20Enabled": false,
+                    "functionAppScaleLimit": 0,
+                    "minimumElasticInstanceCount": 0
+                },
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "clientCertMode": "Required",
+                "hostNamesDisabled": false,
+                "customDomainVerificationId": "37DDC3BEE03861E51E144D3C3E904AF0A2DA7D9479ADD90F95E16C6820637BF0",
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false,
+                "redundancyMode": "None",
+                "storageAccountRequired": false,
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/ftp')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ],
+            "tags": {
+                "Prod": "app service"
+            },
+            "properties": {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/scm')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ],
+            "tags": {
+                "Prod": "app service"
+            },
+            "properties": {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/web')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ],
+            "tags": {
+                "Prod": "app service"
+            },
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": false,
+                "acrUseManagedIdentityCreds": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$AZ-VC-PROD-APPSRV-WEB-ADMIN",
+                "scmType": "None",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": true,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": true
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetRouteAllEnabled": false,
+                "vnetPrivatePortsCount": 0,
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "scmMinTlsVersion": "1.0",
+                "ftpsState": "AllAllowed",
+                "preWarmedInstanceCount": 0,
+                "functionAppScaleLimit": 0,
+                "functionsRuntimeScaleMonitoringEnabled": false,
+                "minimumElasticInstanceCount": 0,
+                "azureStorageAccounts": {}
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '.azurewebsites.net')]",
+            "location": "Central US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ],
+            "properties": {
+                "siteName": "AZ-VC-PROD-APPSRV-WEB-ADMIN",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T00_16_05_5610253')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T01_16_05_5870327')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T02_16_05_5892110')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T03_16_05_6611849')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T04_16_05_6322637')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T05_16_05_6921435')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T06_16_05_6872124')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T07_16_05_7011239')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T08_16_05_7441012')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T09_16_05_7760525')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T10_16_05_7870968')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T11_16_05_8289192')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T12_16_05_8139414')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T13_16_05_9297544')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T14_16_05_8546600')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T15_16_05_9335547')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T16_16_05_9159426')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T17_16_05_9027571')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T18_16_05_9478068')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T19_16_05_9738678')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T20_16_06_0049199')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T21_16_06_0240874')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T22_16_06_0912996')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-13T23_16_06_0635791')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T00_16_06_0887620')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T01_16_06_1440234')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T02_16_06_1301728')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T03_16_06_1403733')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T04_16_06_2015854')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T05_16_06_2058858')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T06_16_06_2540922')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T07_16_06_3064140')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T08_16_06_3494159')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T09_16_06_2917912')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T10_16_06_3277532')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T11_16_06_3640040')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T12_16_06_3646390')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T13_16_06_4053157')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T14_16_06_4287971')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T15_16_06_4434598')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T16_16_06_4990418')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T17_16_06_4781486')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T18_16_06_4977837')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T19_16_06_5254017')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T20_16_06_5880669')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T21_16_06_5819195')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T22_16_06_6068214')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-14T23_16_06_6212274')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T00_16_06_6179499')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T01_16_06_7173462')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T02_16_06_6972153')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T03_16_06_7761633')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T04_16_06_7680634')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T05_16_06_7520462')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T06_16_06_7649166')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T07_16_06_7857626')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T08_16_07_0846253')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T09_16_06_8257282')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T10_16_06_8948153')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T11_16_06_8798589')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T12_16_06_9019161')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T13_16_06_9099139')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T14_16_06_9769666')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T15_16_06_9700336')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T16_16_06_9823547')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T17_16_06_9956467')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T18_16_07_0530158')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T19_16_07_0663066')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T20_16_07_1277206')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'), '/2021-11-15T21_16_07_1419377')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name'))]"
+            ]
+        },
+        {
+            "type": "microsoft.alertsmanagement/smartdetectoralertrules",
+            "apiVersion": "2021-04-01",
+            "name": "[parameters('smartdetectoralertrules_failure_anomalies___az_vc_prod_appsrv_web_admin_insights_name')]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]",
+                "[resourceId('microsoft.insights/actionGroups', parameters('actionGroups_Application_Insights_Smart_Detection_name'))]"
+            ],
+            "properties": {
+                "description": "Failure Anomalies notifies you of an unusual rise in the rate of failed HTTP requests or dependency calls.",
+                "state": "Enabled",
+                "severity": "Sev3",
+                "frequency": "PT1M",
+                "detector": {
+                    "id": "FailureAnomaliesDetector"
+                },
+                "scope": [
+                    "[resourceId('microsoft.insights/components', parameters('components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name'))]"
+                ],
+                "actionGroups": {
+                    "groupIds": [
+                        "[resourceId('microsoft.insights/actionGroups', parameters('actionGroups_Application_Insights_Smart_Detection_name'))]"
+                    ]
+                }
+            }
+        }
+    ]
+}

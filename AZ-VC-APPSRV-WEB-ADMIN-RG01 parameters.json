@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sites_AZ_VC_PROD_APPSRV_WEB_ADMIN_name": {
+            "value": null
+        },
+        "serverfarms_AZ_VC_PROD_APPSRV_WEB_ADMIN_ASP_name": {
+            "value": null
+        },
+        "components_AZ_VC_PROD_APPSRV_WEB_ADMIN_INSIGHTS_name": {
+            "value": null
+        },
+        "actionGroups_Application_Insights_Smart_Detection_name": {
+            "value": null
+        },
+        "smartdetectoralertrules_failure_anomalies___az_vc_prod_appsrv_web_admin_insights_name": {
+            "value": null
+        },
+        "workspaces_defaultworkspace_763499a6_28bb_4e1e_a90e_547b271f8f5a_cus_externalid": {
+            "value": null
+        }
+    }
+}
