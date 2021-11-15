@@ -1,0 +1,255 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccounts_vitalprodcdvstorage_name": {
+            "defaultValue": "vitalprodcdvstorage",
+            "type": "String"
+        },
+        "privateEndpoints_AZ_VC_PROD_CDN_PE01_name": {
+            "defaultValue": "AZ-VC-PROD-CDN-PE01",
+            "type": "String"
+        },
+        "networkInterfaces_AZ_VC_PROD_CDN_PE01_nic_9af037b2_7f44_4b3a_96bf_8e7b5f5c1537_name": {
+            "defaultValue": "AZ-VC-PROD-CDN-PE01.nic.9af037b2-7f44-4b3a-96bf-8e7b5f5c1537",
+            "type": "String"
+        },
+        "virtualNetworks_USC_PROD_VNET_01_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-USC-NET-RG01/providers/Microsoft.Network/virtualNetworks/USC-PROD-VNET-01",
+            "type": "String"
+        },
+        "privateDnsZones_privatelink_blob_core_windows_net_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-USC-NET-RG01/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('networkInterfaces_AZ_VC_PROD_CDN_PE01_nic_9af037b2_7f44_4b3a_96bf_8e7b5f5c1537_name')]",
+            "location": "centralus",
+            "tags": {
+                "Prod": "cdn"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "privateEndpointIpConfig.ee099998-5b9b-428f-97bd-b5acf839f4d7",
+                        "properties": {
+                            "privateIPAddress": "10.100.60.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-CDN-SNT01')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-06-01",
+            "name": "[parameters('storageAccounts_vitalprodcdvstorage_name')]",
+            "location": "centralus",
+            "tags": {
+                "Prod": "cd"
+            },
+            "sku": {
+                "name": "Standard_GRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "defaultToOAuthAuthentication": false,
+                "allowCrossTenantReplication": true,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": true,
+                "allowSharedKeyAccess": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Deny"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "requireInfrastructureEncryption": true,
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('privateEndpoints_AZ_VC_PROD_CDN_PE01_name')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_vitalprodcdvstorage_name'))]"
+            ],
+            "tags": {
+                "Prod": "cdn"
+            },
+            "properties": {
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[parameters('privateEndpoints_AZ_VC_PROD_CDN_PE01_name')]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_vitalprodcdvstorage_name'))]",
+                            "groupIds": [
+                                "blob"
+                            ],
+                            "privateLinkServiceConnectionState": {
+                                "status": "Approved",
+                                "description": "Auto-Approved",
+                                "actionsRequired": "None"
+                            }
+                        }
+                    }
+                ],
+                "manualPrivateLinkServiceConnections": [],
+                "subnet": {
+                    "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-CDN-SNT01')]"
+                },
+                "customDnsConfigs": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('privateEndpoints_AZ_VC_PROD_CDN_PE01_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', parameters('privateEndpoints_AZ_VC_PROD_CDN_PE01_name'))]"
+            ],
+            "properties": {
+                "privateDnsZoneConfigs": [
+                    {
+                        "name": "privatelink-blob-core-windows-net",
+                        "properties": {
+                            "privateDnsZoneId": "[parameters('privateDnsZones_privatelink_blob_core_windows_net_externalid')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_vitalprodcdvstorage_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_vitalprodcdvstorage_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_GRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "changeFeed": {
+                    "enabled": true
+                },
+                "restorePolicy": {
+                    "enabled": true,
+                    "days": 6
+                },
+                "containerDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                },
+                "isVersioningEnabled": true
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_vitalprodcdvstorage_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_vitalprodcdvstorage_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_GRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/privateEndpointConnections",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_vitalprodcdvstorage_name'), '/', parameters('storageAccounts_vitalprodcdvstorage_name'), '.b25c2463-b663-4e59-bf6c-45694c69a8a5')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_vitalprodcdvstorage_name'))]"
+            ],
+            "properties": {
+                "provisioningState": "Succeeded",
+                "privateEndpoint": {},
+                "privateLinkServiceConnectionState": {
+                    "status": "Approved",
+                    "description": "Auto-Approved",
+                    "actionRequired": "None"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_vitalprodcdvstorage_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_vitalprodcdvstorage_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_vitalprodcdvstorage_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_vitalprodcdvstorage_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        }
+    ]
+}

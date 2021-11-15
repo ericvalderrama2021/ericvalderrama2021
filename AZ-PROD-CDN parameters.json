@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccounts_vitalprodcdvstorage_name": {
+            "value": null
+        },
+        "privateEndpoints_AZ_VC_PROD_CDN_PE01_name": {
+            "value": null
+        },
+        "networkInterfaces_AZ_VC_PROD_CDN_PE01_nic_9af037b2_7f44_4b3a_96bf_8e7b5f5c1537_name": {
+            "value": null
+        },
+        "virtualNetworks_USC_PROD_VNET_01_externalid": {
+            "value": null
+        },
+        "privateDnsZones_privatelink_blob_core_windows_net_externalid": {
+            "value": null
+        }
+    }
+}

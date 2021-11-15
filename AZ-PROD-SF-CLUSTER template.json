@@ -1,0 +1,2110 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "loadBalancers_AZ_PROD_SF_ILB01_name": {
+            "defaultValue": "AZ-PROD-SF-ILB01",
+            "type": "String"
+        },
+        "storageAccounts_azvtcprdsflogtgacc_name": {
+            "defaultValue": "azvtcprdsflogtgacc",
+            "type": "String"
+        },
+        "clusters_AZ_PROD_SF_CLUSTER_01_name": {
+            "defaultValue": "AZ-PROD-SF-CLUSTER-01",
+            "type": "String"
+        },
+        "storageAccounts_azvtcprdsfappdiagacc_name": {
+            "defaultValue": "azvtcprdsfappdiagacc",
+            "type": "String"
+        },
+        "virtualMachineScaleSets_AZ_PRD_SF_VMSS_name": {
+            "defaultValue": "AZ-PRD-SF-VMSS",
+            "type": "String"
+        },
+        "networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name": {
+            "defaultValue": "nsgAZ-PRD-APP-SNT-01",
+            "type": "String"
+        },
+        "vaults_AZ_PROD_KEYVAULT_01_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-KeyVault-RG01/providers/Microsoft.KeyVault/vaults/AZ-PROD-KEYVAULT-01",
+            "type": "String"
+        },
+        "virtualNetworks_USC_PROD_VNET_01_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-USC-NET-RG01/providers/Microsoft.Network/virtualNetworks/USC-PROD-VNET-01",
+            "type": "String"
+        },
+        "disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_0_OsDisk_1_969c26eff36a4df2b9faf583078676ed_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-SF-CLUSTER-RG01/providers/Microsoft.Compute/disks/AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_0_OsDisk_1_969c26eff36a4df2b9faf583078676ed",
+            "type": "String"
+        },
+        "disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_1_OsDisk_1_3653fd7f72dd4b859d4fad8daa5edb35_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-SF-CLUSTER-RG01/providers/Microsoft.Compute/disks/AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_1_OsDisk_1_3653fd7f72dd4b859d4fad8daa5edb35",
+            "type": "String"
+        },
+        "disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_2_OsDisk_1_911cac50159a4d99af84a8c65b7b42e6_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-SF-CLUSTER-RG01/providers/Microsoft.Compute/disks/AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_2_OsDisk_1_911cac50159a4d99af84a8c65b7b42e6",
+            "type": "String"
+        },
+        "disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_3_OsDisk_1_03002acfd0f2438f8ffeedd63275248d_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-SF-CLUSTER-RG01/providers/Microsoft.Compute/disks/AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_3_OsDisk_1_03002acfd0f2438f8ffeedd63275248d",
+            "type": "String"
+        },
+        "disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_4_OsDisk_1_451add03552e4cbfa2c34e54e0a64a73_externalid": {
+            "defaultValue": "/subscriptions/763499a6-28bb-4e1e-a90e-547b271f8f5a/resourceGroups/AZ-PROD-SF-CLUSTER-RG01/providers/Microsoft.Compute/disks/AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_4_OsDisk_1_451add03552e4cbfa2c34e54e0a64a73",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name')]",
+            "location": "centralus",
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allowSvcFabCluser",
+                        "properties": {
+                            "description": "allow ports within vnet that are used by the fabric to talk between nodes",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "1025-1027",
+                            "sourceAddressPrefix": "VirtualNetwork",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3920,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowSvcFabEphemeral",
+                        "properties": {
+                            "description": "allow fabric ephemeral ports within the vnet",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "49152-65534",
+                            "sourceAddressPrefix": "VirtualNetwork",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3930,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowSvcFabPortal",
+                        "properties": {
+                            "description": "allow port used to access the fabric cluster web portal",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "19080",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3900,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowSvcFabClient",
+                        "properties": {
+                            "description": "allow port used by the fabric client (includes powershell)",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "19000",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3910,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowSvcFabApplication",
+                        "properties": {
+                            "description": "allow fabric application ports within the vnet",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "20000-30000",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3940,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "blockAll",
+                        "properties": {
+                            "description": "block all traffic except what we've explicitly allowed",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 4095,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowVNetRDP",
+                        "properties": {
+                            "description": "allow RDP within the net",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3960,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowSvcFabReverseProxy",
+                        "properties": {
+                            "description": "allow port used to access the fabric cluster using reverse proxy",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "19081",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3980,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowAppPort1",
+                        "properties": {
+                            "description": "allow public application port 1",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "441",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2001,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "allowAppPort2",
+                        "properties": {
+                            "description": "allow public application port 2",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "443",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2002,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-06-01",
+            "name": "[parameters('storageAccounts_azvtcprdsfappdiagacc_name')]",
+            "location": "centralus",
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "minimumTlsVersion": "TLS1_0",
+                "allowBlobPublicAccess": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": false,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-06-01",
+            "name": "[parameters('storageAccounts_azvtcprdsflogtgacc_name')]",
+            "location": "centralus",
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "minimumTlsVersion": "TLS1_0",
+                "allowBlobPublicAccess": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": false,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '/', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '_ServiceFabricNode')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'))]"
+            ],
+            "properties": {
+                "provisioningState": "Succeeded",
+                "autoUpgradeMinorVersion": true,
+                "publisher": "Microsoft.Azure.ServiceFabric",
+                "type": "ServiceFabricNode",
+                "typeHandlerVersion": "1.1",
+                "settings": {
+                    "clusterEndpoint": "https://centralus.servicefabric.azure.com/runtime/clusters/68d0d547-e634-4594-9195-e1be97f13d5b",
+                    "nodeTypeRef": "AZ-PRD-SF-VMSS",
+                    "dataPath": "D:\\\\SvcFab",
+                    "durabilityLevel": "Silver",
+                    "enableParallelJobs": true,
+                    "certificate": {
+                        "thumbprint": "EEDF3F9B678A164B19A5E8994FE2D43E5D00A5CB",
+                        "x509StoreName": "My"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '/VMDiagnosticsVmExt_vmNodeType0Name')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'))]"
+            ],
+            "properties": {
+                "provisioningState": "Succeeded",
+                "autoUpgradeMinorVersion": true,
+                "publisher": "Microsoft.Azure.Diagnostics",
+                "type": "IaaSDiagnostics",
+                "typeHandlerVersion": "1.5",
+                "settings": {
+                    "WadCfg": {
+                        "DiagnosticMonitorConfiguration": {
+                            "overallQuotaInMB": "50000",
+                            "EtwProviders": {
+                                "EtwEventSourceProviderConfiguration": [
+                                    {
+                                        "provider": "Microsoft-ServiceFabric-Actors",
+                                        "scheduledTransferKeywordFilter": "1",
+                                        "scheduledTransferPeriod": "PT5M",
+                                        "DefaultEvents": {
+                                            "eventDestination": "ServiceFabricReliableActorEventTable"
+                                        }
+                                    },
+                                    {
+                                        "provider": "Microsoft-ServiceFabric-Services",
+                                        "scheduledTransferPeriod": "PT5M",
+                                        "DefaultEvents": {
+                                            "eventDestination": "ServiceFabricReliableServiceEventTable"
+                                        }
+                                    }
+                                ],
+                                "EtwManifestProviderConfiguration": [
+                                    {
+                                        "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                                        "scheduledTransferLogLevelFilter": "Information",
+                                        "scheduledTransferKeywordFilter": "4611686018427387904",
+                                        "scheduledTransferPeriod": "PT5M",
+                                        "DefaultEvents": {
+                                            "eventDestination": "ServiceFabricSystemEventTable"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "StorageAccount": "azvtcprdsfappdiagacc"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('loadBalancers_AZ_PROD_SF_ILB01_name')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerIPConfig",
+                        "properties": {
+                            "privateIPAddress": "10.100.30.4",
+                            "privateIPAllocationMethod": "Static",
+                            "subnet": {
+                                "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-APP-SNT-01')]"
+                            },
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "LoadBalancerBEAddressPool",
+                        "properties": {}
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "LBRule",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            },
+                            "frontendPort": 19000,
+                            "backendPort": 19000,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "protocol": "Tcp",
+                            "enableTcpReset": false,
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/probes/FabricGatewayProbe')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "LBHttpRule",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            },
+                            "frontendPort": 19080,
+                            "backendPort": 19080,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "protocol": "Tcp",
+                            "enableTcpReset": false,
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                            },
+                            "probe": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/probes/FabricHttpGatewayProbe')]"
+                            }
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "FabricGatewayProbe",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 19000,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    },
+                    {
+                        "name": "FabricHttpGatewayProbe",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 19080,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    }
+                ],
+                "inboundNatRules": [
+                    {
+                        "name": "LoadBalancerBEAddressNatPool.0",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            },
+                            "frontendPort": 3389,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "enableTcpReset": false
+                        }
+                    },
+                    {
+                        "name": "LoadBalancerBEAddressNatPool.1",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            },
+                            "frontendPort": 3390,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "enableTcpReset": false
+                        }
+                    },
+                    {
+                        "name": "LoadBalancerBEAddressNatPool.2",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            },
+                            "frontendPort": 3391,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "enableTcpReset": false
+                        }
+                    },
+                    {
+                        "name": "LoadBalancerBEAddressNatPool.3",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            },
+                            "frontendPort": 3392,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "enableTcpReset": false
+                        }
+                    },
+                    {
+                        "name": "LoadBalancerBEAddressNatPool.4",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            },
+                            "frontendPort": 3393,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "enableTcpReset": false
+                        }
+                    }
+                ],
+                "inboundNatPools": [
+                    {
+                        "name": "LoadBalancerBEAddressNatPool",
+                        "properties": {
+                            "frontendPortRangeStart": 3389,
+                            "frontendPortRangeEnd": 4500,
+                            "backendPort": 3389,
+                            "protocol": "Tcp",
+                            "idleTimeoutInMinutes": 4,
+                            "enableFloatingIP": false,
+                            "enableTcpReset": false,
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers/backendAddressPools",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), '/LoadBalancerBEAddressPool')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), '/LoadBalancerBEAddressNatPool.0')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "properties": {
+                "frontendIPConfiguration": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                },
+                "frontendPort": 3389,
+                "backendPort": 3389,
+                "enableFloatingIP": false,
+                "idleTimeoutInMinutes": 4,
+                "protocol": "Tcp",
+                "enableTcpReset": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), '/LoadBalancerBEAddressNatPool.1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "properties": {
+                "frontendIPConfiguration": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                },
+                "frontendPort": 3390,
+                "backendPort": 3389,
+                "enableFloatingIP": false,
+                "idleTimeoutInMinutes": 4,
+                "protocol": "Tcp",
+                "enableTcpReset": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), '/LoadBalancerBEAddressNatPool.2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "properties": {
+                "frontendIPConfiguration": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                },
+                "frontendPort": 3391,
+                "backendPort": 3389,
+                "enableFloatingIP": false,
+                "idleTimeoutInMinutes": 4,
+                "protocol": "Tcp",
+                "enableTcpReset": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), '/LoadBalancerBEAddressNatPool.3')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "properties": {
+                "frontendIPConfiguration": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                },
+                "frontendPort": 3392,
+                "backendPort": 3389,
+                "enableFloatingIP": false,
+                "idleTimeoutInMinutes": 4,
+                "protocol": "Tcp",
+                "enableTcpReset": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), '/LoadBalancerBEAddressNatPool.4')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "properties": {
+                "frontendIPConfiguration": {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/frontendIPConfigurations/LoadBalancerIPConfig')]"
+                },
+                "frontendPort": 3393,
+                "backendPort": 3389,
+                "enableFloatingIP": false,
+                "idleTimeoutInMinutes": 4,
+                "protocol": "Tcp",
+                "enableTcpReset": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowAppPort1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow public application port 1",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "441",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 2001,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowAppPort2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow public application port 2",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "443",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 2002,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowSvcFabApplication')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow fabric application ports within the vnet",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "20000-30000",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 3940,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowSvcFabClient')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow port used by the fabric client (includes powershell)",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "19000",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 3910,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowSvcFabCluser')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow ports within vnet that are used by the fabric to talk between nodes",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "1025-1027",
+                "sourceAddressPrefix": "VirtualNetwork",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 3920,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowSvcFabEphemeral')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow fabric ephemeral ports within the vnet",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "49152-65534",
+                "sourceAddressPrefix": "VirtualNetwork",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 3930,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowSvcFabPortal')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow port used to access the fabric cluster web portal",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "19080",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 3900,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowSvcFabReverseProxy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow port used to access the fabric cluster using reverse proxy",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "19081",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 3980,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/allowVNetRDP')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "allow RDP within the net",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 3960,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'), '/blockAll')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_nsgAZ_PRD_APP_SNT_01_name'))]"
+            ],
+            "properties": {
+                "description": "block all traffic except what we've explicitly allowed",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Deny",
+                "priority": 4095,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.ServiceFabric/clusters",
+            "apiVersion": "2021-06-01",
+            "name": "[parameters('clusters_AZ_PROD_SF_CLUSTER_01_name')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/StorageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "properties": {
+                "clusterCodeVersion": "8.2.1235.9590",
+                "managementEndpoint": "https://10.100.30.4:19080",
+                "certificate": {
+                    "thumbprint": "EEDF3F9B678A164B19A5E8994FE2D43E5D00A5CB",
+                    "x509StoreName": "My"
+                },
+                "clientCertificateThumbprints": [],
+                "clientCertificateCommonNames": [],
+                "fabricSettings": [
+                    {
+                        "name": "Security",
+                        "parameters": [
+                            {
+                                "name": "ClusterProtectionLevel",
+                                "value": "EncryptAndSign"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Security",
+                        "parameters": [
+                            {
+                                "name": "ClusterProtectionLevel",
+                                "value": "EncryptAndSign"
+                            }
+                        ]
+                    }
+                ],
+                "vmImage": "Windows",
+                "reliabilityLevel": "None",
+                "nodeTypes": [
+                    {
+                        "name": "AZ-PRD-SF-VMSS",
+                        "clientConnectionEndpointPort": 19000,
+                        "httpGatewayEndpointPort": 19080,
+                        "applicationPorts": {
+                            "startPort": 20000,
+                            "endPort": 30000
+                        },
+                        "ephemeralPorts": {
+                            "startPort": 49152,
+                            "endPort": 65534
+                        },
+                        "isPrimary": true,
+                        "durabilityLevel": "Silver",
+                        "vmInstanceCount": 5,
+                        "isStateless": false
+                    }
+                ],
+                "diagnosticsStorageAccountConfig": {
+                    "storageAccountName": "azvtcprdsflogtgacc",
+                    "protectedAccountKeyName": "StorageAccountKey1",
+                    "blobEndpoint": "[concat('https://', parameters('storageAccounts_azvtcprdsflogtgacc_name'), '.blob.core.windows.net/')]",
+                    "queueEndpoint": "[concat('https://', parameters('storageAccounts_azvtcprdsflogtgacc_name'), '.queue.core.windows.net/')]",
+                    "tableEndpoint": "[concat('https://', parameters('storageAccounts_azvtcprdsflogtgacc_name'), '.table.core.windows.net/')]"
+                },
+                "upgradeMode": "Automatic",
+                "addonFeatures": [
+                    "DnsService",
+                    "RepairManager"
+                ],
+                "upgradeWave": "Wave0"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsfappdiagacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsfappdiagacc_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsfappdiagacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsfappdiagacc_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsfappdiagacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsfappdiagacc_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsfappdiagacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsfappdiagacc_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "apiVersion": "2021-07-01",
+            "name": "[parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]",
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_B4ms",
+                "tier": "Standard",
+                "capacity": 5
+            },
+            "properties": {
+                "singlePlacementGroup": true,
+                "upgradePolicy": {
+                    "mode": "Automatic"
+                },
+                "virtualMachineProfile": {
+                    "osProfile": {
+                        "computerNamePrefix": "SFVMSS",
+                        "adminUsername": "ProdVTCSFAdmin",
+                        "windowsConfiguration": {
+                            "provisionVMAgent": true,
+                            "enableAutomaticUpdates": true
+                        },
+                        "secrets": [
+                            {
+                                "sourceVault": {
+                                    "id": "[parameters('vaults_AZ_PROD_KEYVAULT_01_externalid')]"
+                                },
+                                "vaultCertificates": [
+                                    {
+                                        "certificateUrl": "https://az-prod-keyvault-01.vault.azure.net/secrets/VitalCard/9c87c2c059bb4486861612d115ee9f48",
+                                        "certificateStore": "My"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "storageProfile": {
+                        "osDisk": {
+                            "osType": "Windows",
+                            "createOption": "FromImage",
+                            "caching": "ReadOnly",
+                            "managedDisk": {
+                                "storageAccountType": "Standard_LRS"
+                            },
+                            "diskSizeGB": 127
+                        },
+                        "imageReference": {
+                            "publisher": "MicrosoftWindowsServer",
+                            "offer": "WindowsServer",
+                            "sku": "2019-Datacenter",
+                            "version": "latest"
+                        }
+                    },
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "NIC-az-prd-fabric01-0",
+                                "properties": {
+                                    "primary": true,
+                                    "enableAcceleratedNetworking": false,
+                                    "dnsSettings": {
+                                        "dnsServers": []
+                                    },
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "NIC-az-prd-fabric01-0",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-APP-SNT-01')]"
+                                                },
+                                                "privateIPAddressVersion": "IPv4",
+                                                "loadBalancerBackendAddressPools": [
+                                                    {
+                                                        "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                                                    }
+                                                ],
+                                                "loadBalancerInboundNatPools": [
+                                                    {
+                                                        "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '_ServiceFabricNode')]",
+                                "properties": {
+                                    "autoUpgradeMinorVersion": true,
+                                    "publisher": "Microsoft.Azure.ServiceFabric",
+                                    "type": "ServiceFabricNode",
+                                    "typeHandlerVersion": "1.1",
+                                    "settings": {
+                                        "clusterEndpoint": "https://centralus.servicefabric.azure.com/runtime/clusters/68d0d547-e634-4594-9195-e1be97f13d5b",
+                                        "nodeTypeRef": "[parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name')]",
+                                        "dataPath": "D:\\\\SvcFab",
+                                        "durabilityLevel": "Silver",
+                                        "enableParallelJobs": true,
+                                        "certificate": {
+                                            "thumbprint": "EEDF3F9B678A164B19A5E8994FE2D43E5D00A5CB",
+                                            "x509StoreName": "My"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "VMDiagnosticsVmExt_vmNodeType0Name",
+                                "properties": {
+                                    "autoUpgradeMinorVersion": true,
+                                    "publisher": "Microsoft.Azure.Diagnostics",
+                                    "type": "IaaSDiagnostics",
+                                    "typeHandlerVersion": "1.5",
+                                    "settings": {
+                                        "WadCfg": {
+                                            "DiagnosticMonitorConfiguration": {
+                                                "overallQuotaInMB": "50000",
+                                                "EtwProviders": {
+                                                    "EtwEventSourceProviderConfiguration": [
+                                                        {
+                                                            "provider": "Microsoft-ServiceFabric-Actors",
+                                                            "scheduledTransferKeywordFilter": "1",
+                                                            "scheduledTransferPeriod": "PT5M",
+                                                            "DefaultEvents": {
+                                                                "eventDestination": "ServiceFabricReliableActorEventTable"
+                                                            }
+                                                        },
+                                                        {
+                                                            "provider": "Microsoft-ServiceFabric-Services",
+                                                            "scheduledTransferPeriod": "PT5M",
+                                                            "DefaultEvents": {
+                                                                "eventDestination": "ServiceFabricReliableServiceEventTable"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "EtwManifestProviderConfiguration": [
+                                                        {
+                                                            "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                                                            "scheduledTransferLogLevelFilter": "Information",
+                                                            "scheduledTransferKeywordFilter": "4611686018427387904",
+                                                            "scheduledTransferPeriod": "PT5M",
+                                                            "DefaultEvents": {
+                                                                "eventDestination": "ServiceFabricSystemEventTable"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "StorageAccount": "azvtcprdsfappdiagacc"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                "overprovision": false,
+                "doNotRunExtensionsOnOverprovisionedVMs": false
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriccounters-68d0d547-e634-4594-9195-e1be97f13d5b')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriccrashdumps-68d0d547-e634-4594-9195-e1be97f13d5b')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclogs-68d0d547-e634-4594-9195-e1be97f13d5b')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bApi')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bApplicationHostEvents')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bApplications')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bApplicationsOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bClient')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bClusterOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bContainerEvents')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bContainerOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bCorrelationOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bDeploymentIds')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bGlobalTime')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bincidents')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bNodes')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bNodesOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bPartitions')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bPartitionsOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bReconfig')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bReplicasOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bServices')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsflogtgacc_name'), '/default/fabriclog68d0d547e63445949195e1be97f13d5bServicesOps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsflogtgacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsflogtgacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsfappdiagacc_name'), '/default/SchemasTable')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsfappdiagacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsfappdiagacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsfappdiagacc_name'), '/default/WADServiceFabricReliableServiceEventTable')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsfappdiagacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsfappdiagacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-06-01",
+            "name": "[concat(parameters('storageAccounts_azvtcprdsfappdiagacc_name'), '/default/WADServiceFabricSystemEventTable')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccounts_azvtcprdsfappdiagacc_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_azvtcprdsfappdiagacc_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '/0')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'))]",
+                "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]",
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_B4ms",
+                "tier": "Standard"
+            },
+            "properties": {
+                "networkProfileConfiguration": {
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "NIC-az-prd-fabric01-0",
+                            "properties": {
+                                "primary": true,
+                                "enableAcceleratedNetworking": false,
+                                "dnsSettings": {
+                                    "dnsServers": []
+                                },
+                                "ipConfigurations": [
+                                    {
+                                        "name": "NIC-az-prd-fabric01-0",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-APP-SNT-01')]"
+                                            },
+                                            "privateIPAddressVersion": "IPv4",
+                                            "loadBalancerBackendAddressPools": [
+                                                {
+                                                    "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                                                }
+                                            ],
+                                            "loadBalancerInboundNatPools": [
+                                                {
+                                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "hardwareProfile": {},
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_0_OsDisk_1_969c26eff36a4df2b9faf583078676ed",
+                        "createOption": "FromImage",
+                        "caching": "ReadOnly",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS",
+                            "id": "[parameters('disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_0_OsDisk_1_969c26eff36a4df2b9faf583078676ed_externalid')]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "SFVMSS000000",
+                    "adminUsername": "ProdVTCSFAdmin",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [
+                        {
+                            "sourceVault": {
+                                "id": "[parameters('vaults_AZ_PROD_KEYVAULT_01_externalid')]"
+                            },
+                            "vaultCertificates": [
+                                {
+                                    "certificateUrl": "https://az-prod-keyvault-01.vault.azure.net/secrets/VitalCard/9c87c2c059bb4486861612d115ee9f48",
+                                    "certificateStore": "My"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '0'), '/networkInterfaces/NIC-az-prd-fabric01-0')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '/1')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'))]",
+                "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]",
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_B4ms",
+                "tier": "Standard"
+            },
+            "properties": {
+                "networkProfileConfiguration": {
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "NIC-az-prd-fabric01-0",
+                            "properties": {
+                                "primary": true,
+                                "enableAcceleratedNetworking": false,
+                                "dnsSettings": {
+                                    "dnsServers": []
+                                },
+                                "ipConfigurations": [
+                                    {
+                                        "name": "NIC-az-prd-fabric01-0",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-APP-SNT-01')]"
+                                            },
+                                            "privateIPAddressVersion": "IPv4",
+                                            "loadBalancerBackendAddressPools": [
+                                                {
+                                                    "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                                                }
+                                            ],
+                                            "loadBalancerInboundNatPools": [
+                                                {
+                                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "hardwareProfile": {},
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_1_OsDisk_1_3653fd7f72dd4b859d4fad8daa5edb35",
+                        "createOption": "FromImage",
+                        "caching": "ReadOnly",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS",
+                            "id": "[parameters('disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_1_OsDisk_1_3653fd7f72dd4b859d4fad8daa5edb35_externalid')]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "SFVMSS000001",
+                    "adminUsername": "ProdVTCSFAdmin",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [
+                        {
+                            "sourceVault": {
+                                "id": "[parameters('vaults_AZ_PROD_KEYVAULT_01_externalid')]"
+                            },
+                            "vaultCertificates": [
+                                {
+                                    "certificateUrl": "https://az-prod-keyvault-01.vault.azure.net/secrets/VitalCard/9c87c2c059bb4486861612d115ee9f48",
+                                    "certificateStore": "My"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '1'), '/networkInterfaces/NIC-az-prd-fabric01-0')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '/2')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'))]",
+                "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]",
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_B4ms",
+                "tier": "Standard"
+            },
+            "properties": {
+                "networkProfileConfiguration": {
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "NIC-az-prd-fabric01-0",
+                            "properties": {
+                                "primary": true,
+                                "enableAcceleratedNetworking": false,
+                                "dnsSettings": {
+                                    "dnsServers": []
+                                },
+                                "ipConfigurations": [
+                                    {
+                                        "name": "NIC-az-prd-fabric01-0",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-APP-SNT-01')]"
+                                            },
+                                            "privateIPAddressVersion": "IPv4",
+                                            "loadBalancerBackendAddressPools": [
+                                                {
+                                                    "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                                                }
+                                            ],
+                                            "loadBalancerInboundNatPools": [
+                                                {
+                                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "hardwareProfile": {},
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_2_OsDisk_1_911cac50159a4d99af84a8c65b7b42e6",
+                        "createOption": "FromImage",
+                        "caching": "ReadOnly",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS",
+                            "id": "[parameters('disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_2_OsDisk_1_911cac50159a4d99af84a8c65b7b42e6_externalid')]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "SFVMSS000002",
+                    "adminUsername": "ProdVTCSFAdmin",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [
+                        {
+                            "sourceVault": {
+                                "id": "[parameters('vaults_AZ_PROD_KEYVAULT_01_externalid')]"
+                            },
+                            "vaultCertificates": [
+                                {
+                                    "certificateUrl": "https://az-prod-keyvault-01.vault.azure.net/secrets/VitalCard/9c87c2c059bb4486861612d115ee9f48",
+                                    "certificateStore": "My"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '2'), '/networkInterfaces/NIC-az-prd-fabric01-0')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '/3')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'))]",
+                "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]",
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_B4ms",
+                "tier": "Standard"
+            },
+            "properties": {
+                "networkProfileConfiguration": {
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "NIC-az-prd-fabric01-0",
+                            "properties": {
+                                "primary": true,
+                                "enableAcceleratedNetworking": false,
+                                "dnsSettings": {
+                                    "dnsServers": []
+                                },
+                                "ipConfigurations": [
+                                    {
+                                        "name": "NIC-az-prd-fabric01-0",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-APP-SNT-01')]"
+                                            },
+                                            "privateIPAddressVersion": "IPv4",
+                                            "loadBalancerBackendAddressPools": [
+                                                {
+                                                    "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                                                }
+                                            ],
+                                            "loadBalancerInboundNatPools": [
+                                                {
+                                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "hardwareProfile": {},
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_3_OsDisk_1_03002acfd0f2438f8ffeedd63275248d",
+                        "createOption": "FromImage",
+                        "caching": "ReadOnly",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS",
+                            "id": "[parameters('disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_3_OsDisk_1_03002acfd0f2438f8ffeedd63275248d_externalid')]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "SFVMSS000003",
+                    "adminUsername": "ProdVTCSFAdmin",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [
+                        {
+                            "sourceVault": {
+                                "id": "[parameters('vaults_AZ_PROD_KEYVAULT_01_externalid')]"
+                            },
+                            "vaultCertificates": [
+                                {
+                                    "certificateUrl": "https://az-prod-keyvault-01.vault.azure.net/secrets/VitalCard/9c87c2c059bb4486861612d115ee9f48",
+                                    "certificateStore": "My"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '3'), '/networkInterfaces/NIC-az-prd-fabric01-0')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[concat(parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '/4')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'))]",
+                "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]",
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'))]"
+            ],
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "AZ-PROD-SF-CLUSTER-01"
+            },
+            "sku": {
+                "name": "Standard_B4ms",
+                "tier": "Standard"
+            },
+            "properties": {
+                "networkProfileConfiguration": {
+                    "networkInterfaceConfigurations": [
+                        {
+                            "name": "NIC-az-prd-fabric01-0",
+                            "properties": {
+                                "primary": true,
+                                "enableAcceleratedNetworking": false,
+                                "dnsSettings": {
+                                    "dnsServers": []
+                                },
+                                "ipConfigurations": [
+                                    {
+                                        "name": "NIC-az-prd-fabric01-0",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[concat(parameters('virtualNetworks_USC_PROD_VNET_01_externalid'), '/subnets/AZ-PRD-APP-SNT-01')]"
+                                            },
+                                            "privateIPAddressVersion": "IPv4",
+                                            "loadBalancerBackendAddressPools": [
+                                                {
+                                                    "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancers_AZ_PROD_SF_ILB01_name'), 'LoadBalancerBEAddressPool')]"
+                                                }
+                                            ],
+                                            "loadBalancerInboundNatPools": [
+                                                {
+                                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancers_AZ_PROD_SF_ILB01_name')), '/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "hardwareProfile": {},
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "AZ-PRD-SF-VMSS_AZ-PRD-SF-VMSS_4_OsDisk_1_451add03552e4cbfa2c34e54e0a64a73",
+                        "createOption": "FromImage",
+                        "caching": "ReadOnly",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS",
+                            "id": "[parameters('disks_AZ_PRD_SF_VMSS_AZ_PRD_SF_VMSS_4_OsDisk_1_451add03552e4cbfa2c34e54e0a64a73_externalid')]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "SFVMSS000004",
+                    "adminUsername": "ProdVTCSFAdmin",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [
+                        {
+                            "sourceVault": {
+                                "id": "[parameters('vaults_AZ_PROD_KEYVAULT_01_externalid')]"
+                            },
+                            "vaultCertificates": [
+                                {
+                                    "certificateUrl": "https://az-prod-keyvault-01.vault.azure.net/secrets/VitalCard/9c87c2c059bb4486861612d115ee9f48",
+                                    "certificateStore": "My"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/virtualMachines', parameters('virtualMachineScaleSets_AZ_PRD_SF_VMSS_name'), '4'), '/networkInterfaces/NIC-az-prd-fabric01-0')]"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
